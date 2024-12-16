@@ -29,10 +29,11 @@ class Author:
             raise AttributeError("name cannot be changed once given")
         self._name = name
 
+
     @property
     def articles(self):
         """
-        property method to retrieve the articles of the author.
+        Retrieves the articles for the magazine.
         """
         from models.article import Article
         conn = get_db_connection()
@@ -40,16 +41,23 @@ class Author:
         cursor.execute('''
             SELECT articles.id, articles.title, articles.content, articles.author_id, articles.magazine_id
             FROM articles
-            INNER JOIN authors ON articles.author_id = authors.id
-            WHERE authors.id = ?
-        ''', (self.id))
+            WHERE articles.magazine_id = ?
+        ''', (self.id,))
         article_info = cursor.fetchall()
         conn.close()
-        if article_info:
-            return [ Article(article["id"], article['title'], article['content'], article['author_id'], article['magazine_id']) for article in article_info]
-        else:
-            return []
-        
+
+        valid_articles = []
+        for article in article_info:
+            title = article['title']
+            print(f"Title: '{title}' (Length: {len(title)})")  # Debugging: Print the title and its length
+            if isinstance(title, str) and 5 <= len(title) <= 50:
+                valid_articles.append(Article(article["id"], title, article['content'], article['author_id'], article['magazine_id']))
+            else:
+                print(f"Skipping article with invalid title: {title}")
+
+        return valid_articles
+
+
 
     @property
     def magazines(self):

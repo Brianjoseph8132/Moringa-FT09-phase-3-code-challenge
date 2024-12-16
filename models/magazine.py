@@ -44,7 +44,7 @@ class Magazine:
     @property
     def articles(self):
         """
-        Retrieves the articles of the magazine.
+        Retrieves the articles for the magazine.
         """
         from models.article import Article
         conn = get_db_connection()
@@ -53,13 +53,21 @@ class Magazine:
             SELECT articles.id, articles.title, articles.content, articles.author_id, articles.magazine_id
             FROM articles
             WHERE articles.magazine_id = ?
-        ''',(self.id,))
+        ''', (self.id,))
         article_info = cursor.fetchall()
         conn.close()
-        if article_info:
-            return [Article(article["id"], article['title'], article['content'], article['author_id'], article['magazine_id']) for article in article_info]
-        else:
-            return []
+
+        valid_articles = []
+        for article in article_info:
+            title = article['title']
+            print(f"Title: '{title}' (Length: {len(title)})")  # Debugging: Print the title and its length
+            if isinstance(title, str) and 5 <= len(title) <= 50:
+                valid_articles.append(Article(article["id"], title, article['content'], article['author_id'], article['magazine_id']))
+            else:
+                print(f"Skipping article with invalid title: {title}")
+
+        return valid_articles
+
         
 
     def contributors(self):
@@ -88,14 +96,14 @@ class Magazine:
         return [article.title for article in self.articles]
     
     def contributing_authors(self):
-        if self.contributors:
-            contributing = [contributor for contributor in self.contributors if len([article for article in self.articles if article.author.id == contributor.id]) > 2]
+        if self.contributors():
+            contributing = [contributor for contributor in self.contributors() if len([article for article in self.articles if article.author.id == contributor.id]) > 2]
             return contributing
         else:
             return None
 
     def __repr__(self):
-        contributer_titles = "; ".join([contributer.name for contributer in self.contributors]) if self.contributors else "None"
+        contributer_titles = "; ".join([contributer.name for contributer in self.contributors()]) if self.contributors() else "None"
         major_contributors = ";".join([contributer.name for contributer in self.contributing_authors()]) if self.contributing_authors() else "None"
         article_titles = ";".join([article.title for article in self.articles]) if self.articles else "None"
         return f'Magazine:{self.name} |Id: {self.id} |Article:{article_titles}|| Contributer:{contributer_titles} || Major contributors:{major_contributors}'

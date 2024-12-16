@@ -10,7 +10,7 @@ class Article:
         Initializes an Article object with provided attributes.
         """
         self.id = id
-        self.title = title
+        self._title = title
         self.content = content
         self.author_id = author_id
         self.magazine_id = magazine_id
@@ -60,13 +60,14 @@ class Article:
 
     @title.setter
     def title(self, title):
+        # If title has not been set, check the constraints
         if not hasattr(self, '_title'):
-            if isinstance(title,str) and 5 <= len(title) <= 50:
+            if isinstance(title, str) and 5 <= len(title) <= 50:
                 self._title = title
             else:
-                raise TypeError("title must be of type str and between 5 and 50 characters")
+                raise TypeError(" title must be of type str and between 5 and 50 characters")
         else:
-            raise AttributeError("title cannot be changed")
+            raise AttributeError("title cannot be changed once set")
         
 
     def create_dtb_entry(self):
@@ -88,7 +89,7 @@ class Article:
         """
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM authors WHERE id = ?', (author_id))
+        cursor.execute('SELECT * FROM authors WHERE id = ?', (author_id,))
         author_information = cursor.fetchone()
         conn.close()
         return author_information
